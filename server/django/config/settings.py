@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 """
 
+import sys
 from pathlib import Path
 
 import environ
@@ -175,3 +176,6 @@ MEMO_LIFETIME_MINUTES = 15
 CORS_ALLOWED_ORIGINS = env.list("DJANGO_CORS_ALLOWED_ORIGINS")
 
 CLIENT_BASE_URL = env.str("CLIENT_BASE_URL")
+
+if "test" in sys.argv:
+    MEDIA_ROOT = BASE_DIR / "test_media"
