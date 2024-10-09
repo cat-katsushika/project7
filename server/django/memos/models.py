@@ -1,10 +1,9 @@
-import random
+import secrets
 import string
 import uuid
 from io import BytesIO
 
 import qrcode
-
 from django.core.files.base import ContentFile
 from django.db import models
 from django.db.models.signals import post_delete, pre_save
@@ -20,13 +19,10 @@ class Memo(models.Model):
     qr_img = models.ImageField(upload_to="qr_codes/", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def clean(self) -> None:
-        super().clean()
-        # passkeyが6文字であることを確認
-        if len(self.passkey) != 6:
-            raise ValueError("Passkey must be 6 characters long")
+    def __str__(self) -> str:
+        return f"Memo {self.id}"
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         # 通常のsaveを先に呼び出してidを生成
         if not self.id:
             super().save(*args, **kwargs)
@@ -52,18 +48,27 @@ class Memo(models.Model):
         img.save(img_io, "PNG")
         img_content = ContentFile(img_io.getvalue(), "qr_code.png")
 
-        # ImageFieldに画像を保存（インスタンスのIDに基づいたファイル名で保存）
+        # ImageFieldに画像をインスタンスのIDに基づいたファイル名で保存
         self.qr_img.save(f"{self.id}.png", img_content, save=False)
 
         # 再度saveを呼び出してQRコードを保存
         super().save(*args, **kwargs)
 
+    def clean(self) -> None:
+        super().clean()
+        # passkeyが6文字であることを確認
+        passkey_length = 6
+        if len(self.passkey) != passkey_length:
+            msg = "Passkey must be 6 characters long"
+            raise ValueError(msg)
+
 
 @receiver(pre_save, sender=Memo)
-def generate_passkey(sender, instance, **kwargs):
+def generate_passkey(sender, instance, **kwargs) -> None:  # noqa: ARG001
     # ランダムに6文字生成
     while True:
-        passkey = "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
+        characters = string.ascii_lowercase + string.digits
+        passkey = "".join(secrets.choice(characters) for _ in range(6))
         # 重複していなければ採用
         if not Memo.objects.filter(passkey=passkey).exists():
             instance.passkey = passkey
@@ -71,6 +76,6 @@ def generate_passkey(sender, instance, **kwargs):
 
 
 @receiver(post_delete, sender=Memo)
-def delete_image_files(sender, instance, **kwargs):
+def delete_image_files(sender, instance, **kwargs) -> None:  # noqa: ARG001
     if instance.qr_img:
         instance.qr_img.delete(save=False)
