@@ -9,14 +9,12 @@ class MemoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Memo
         fields = "__all__"
-        read_only_fields = ["id", "qr_img", "passkey", "created_at"]
+        read_only_fields = ("id", "qr_img", "passkey", "created_at")
 
     def get_qr_img(self, obj):
-        """
-        QRコード画像をHTTP URL に変換して返す
-        """
+        """QRコード画像をHTTP URL に変換して返す."""
         request = self.context.get("request")
         if request:
             return request.build_absolute_uri(obj.qr_img.url)
-        else:
-            raise Exception("Request object is required to build the absolute URI for 'qr_img'.")
+        msg = "Request object is required to build the absolute URI for 'qr_img'."
+        raise RuntimeError(msg)

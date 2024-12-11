@@ -30,7 +30,7 @@ paths:
           content:
             application/json:
               example:
-                detail: passkeyをリクエストボディに含めてください．
+                detail: passkeyをリクエストボディに含めてください。
         '404':
           description: メモが見つからない
           content:
@@ -124,7 +124,7 @@ paths:
           content:
             application/json:
               example:
-                detail: 4個のmemoを削除しました．
+                detail: 4個のmemoを削除しました。
 
 
 components:

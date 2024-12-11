@@ -27,24 +27,21 @@ logs:
 test:
 	docker compose -f compose-dev.yml exec django python manage.py test
 
-# Lintとフォーマット
-.PHONY: black
-black:
-	docker compose -f compose-dev.yml exec django black .
+# pythonコードのリント
+.PHONY: ruff-check
+ruff-check:
+	docker compose -f compose-dev.yml exec django ruff check --fix .
 
-.PHONY: isort
-isort:
-	docker compose -f compose-dev.yml exec django isort .
+# pythonコードのフォーマット
+.PHONY: ruff-format
+ruff-format:
+	docker compose -f compose-dev.yml exec django ruff format .
 
-.PHONY: flake8
-flake8:
-	docker compose -f compose-dev.yml exec django flake8 .
-
-.PHONY: lint
-lint:
-	@make black
-	@make isort
-	@make flake8
+# pythonコードのフォーマットとリント
+.PHONY: ruff
+ruff:
+	@make ruff-check
+	@make ruff-format
 
 .PHONY: prod-build
 prod-build:

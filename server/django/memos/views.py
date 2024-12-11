@@ -1,12 +1,11 @@
 from datetime import timedelta
 
+from django.conf import settings
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from django.conf import settings
-from django.utils import timezone
 
 from .models import Memo
 from .serializers import MemoSerializer
@@ -18,7 +17,7 @@ class MemosAPIView(APIView):
         passkey = request.data.get("passkey")
         if not passkey:
             return Response(
-                {"detail": "passkeyをリクエストボディに含めてください．"}, status=status.HTTP_400_BAD_REQUEST
+                {"detail": "passkeyをリクエストボディに含めてください。"}, status=status.HTTP_400_BAD_REQUEST
             )
 
         # オブジェクトが見つからない場合、404エラーを返す
@@ -29,7 +28,7 @@ class MemosAPIView(APIView):
 
 
 class DeleteExpiredMemosAPIView(APIView):
-    def delete(self, request):
+    def delete(self, _request):
         # 現在の時刻からmemoの生存時間分前の時間を計算
         time_threshold = timezone.now() - timedelta(minutes=settings.MEMO_LIFETIME_MINUTES)
 
@@ -37,23 +36,23 @@ class DeleteExpiredMemosAPIView(APIView):
         memos = Memo.objects.filter(created_at__lt=time_threshold)
         deleted_count, _ = memos.delete()
 
-        return Response({"detail": f"{deleted_count}個のmemoを削除しました．"}, status=status.HTTP_200_OK)
+        return Response({"detail": f"{deleted_count}個のmemoを削除しました。"}, status=status.HTTP_200_OK)
 
 
 class MemoRetrieveDestroyAPIView(APIView):
-    def get(self, request, pk, *args, **kwargs):
+    def get(self, request, pk):
         memo = get_object_or_404(Memo, pk=pk)
         serializer = MemoSerializer(memo, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def delete(self, request, pk, *args, **kwargs):
+    def delete(self, _request, pk):
         memo = get_object_or_404(Memo, pk=pk)
         memo.delete()
-        return Response({"detail": "メモを削除しました．"}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"detail": "メモを削除しました。"}, status=status.HTTP_204_NO_CONTENT)
 
 
 class MemoCreateAPIView(APIView):
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         serializer = MemoSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
